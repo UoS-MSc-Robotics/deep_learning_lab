@@ -3,10 +3,10 @@ clear all;
 % define the random number seed for repeatable results
 rng(1,'twister');
 
-%% Load Speech Commands Data 
+%% Load Speech Commands Data
 
 % define the folder for the speech dataset in .wav format, 1 second files
-datasetFolder = 'speechDataReduced';
+datasetFolder = 'personalRecordings';
 
 % Create an audioDatastore that points to the data set
 ads = audioDatastore(datasetFolder, ...
@@ -17,7 +17,7 @@ ads = audioDatastore(datasetFolder, ...
 %% Choose Words to Recognize
 
 % define a subset of command words to recognise from the full data set
-commands = categorical(["yes","no","up","down","left","right","on","off","stop","go"]);
+commands = categorical(["yes","no"]);
 
 % define an index into command words and unknown words
 isCommand = ismember(ads.Labels,commands);
@@ -32,7 +32,7 @@ mask = rand(numel(ads.Labels),1) < includeFraction;
 isUnknown = isUnknown & mask;
 ads.Labels(isUnknown) = categorical("unknown");
 
-% create a new data store of only command words and unknown words 
+% create a new data store of only command words and unknown words
 adsSubset = subset(ads,isCommand|isUnknown);
 
 % count the number of instances of each word
@@ -45,16 +45,16 @@ p1 = 0.6; % training data proportion
 p2 = 0.4; % validation data proportion
 [adsTrain,adsValidation] = splitEachLabel(adsSubset,p1);
 
-% reduce the dataset to speed up training 
+% reduce the dataset to speed up training
 numUniqueLabels = numel(unique(adsTrain.Labels));
-nReduce = 4; % Reduce the dataset by a factor of nReduce
+nReduce = 1; % Reduce the dataset by a factor of nReduce
 adsTrain = splitEachLabel(adsTrain,round(numel(adsTrain.Files) / numUniqueLabels / nReduce));
 adsValidation = splitEachLabel(adsValidation,round(numel(adsValidation.Files) / numUniqueLabels / nReduce));
 
 %% define object for computing auditory spectrograms from audio data
 
 % spectrogram parameters
-fs = 16e3;             % sample rate of the data set
+fs = 8e3;             % sample rate of the data set
 segmentDuration = 1;   % duration of each speech clip (in seconds)
 frameDuration = 0.025; % duration of each frame for spectrum calculation
 hopDuration = 0.010;   % time step between each spectrum
@@ -141,22 +141,39 @@ for i = 1:3
     plot(x)
     axis tight
     title(string(adsTrain.Labels(idx(i))))
-    
+
     subplot(2,3,i+3)
     spect = (XTrain(:,:,1,idx(i))');
     pcolor(spect)
     caxis([specMin specMax])
     shading flat
-    
+
     sound(x,fs)
     pause(2)
 end
 
-%% now save data as .png images 
+%% now save data as .png images
 
-% e.g. do 
-% tmp_image =  XTrain(:,:,1,i);
-% imwrite(tmp_image, ['speechImageData/TrainingData/down/image' num2str(i) '.png']);
+% create a folder to save the images
+mkdir('spectrogramImages');
+
+% create subfolders for each class
+for i = 1:length(commands)
+    mkdir(['spectrogramImages/',char(commands(i))]);
+end
+
+% save the images based on class
+% Training data
+for i = 1:numel(adsTrain.Files)
+    spect = (XTrain(:,:,1,i)');
+    imwrite(spect,['spectrogramImages/',char(YTrain(i)),'/',num2str(i),'.png']);
+end
+
+% Validation data
+for i = 1:numel(adsValidation.Files)
+    spect = (XValidation(:,:,1,i)');
+    imwrite(spect,['spectrogramImages/',char(YValidation(i)),'/',num2str(i),'.png']);
+end
 
 
 
