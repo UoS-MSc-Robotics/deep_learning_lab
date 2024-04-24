@@ -7,40 +7,41 @@ function [NextObs, Reward, IsDone, LoggedSignals] = stepDynamics(Action, LoggedS
     IsDone = false;
 
     % Unpack LoggedSignals
-    xt = LoggedSignals(1);
-    xdot_t = LoggedSignals(2);
+    x = LoggedSignals(1);
+    xdot = LoggedSignals(2);
 
     % Define Control Input as Action
-    ut = Action;
+    u = Action;
 
     % Run mountain car dynamics to calculate acceleration
-    xddot_t = 0.001 * ut - 0.0025 * cos(3 * xt);
+    xdotdot = 0.001 * u - 0.0025 * cos(3*x);
 
     % Update dynamics using first order numerical integration with time-step T = 1
-    xt_plus_1 = xt + xdot_t;
-    xdot_t_plus_1 = xdot_t + xddot_t;
+    T = 1;
+    x = x + T * xdot;
+    xdot = xdot + T * xdotdot;
 
     % Saturate position and velocity of cart to prevent going out of bounds
-    if xt_plus_1 < -1.2
-        xt_plus_1 = -1.2;
+    if x < -1.2
+        x = -1.2;
     end
-    if xdot_t_plus_1 < -0.07
-        xdot_t_plus_1 = -0.07;
+    if xdot < -0.07
+        xdot = -0.07;
     end
-    if xdot_t_plus_1 > 0.07
-        xdot_t_plus_1 = 0.07;
+    if xdot > 0.07
+        xdot = 0.07;
     end
 
     % Set terminal condition if cart reaches desired end point
-    if xt_plus_1 > 0.5
+    if x > 0.5
         IsDone = true;
     end
 
     % Define next observation as the new state vector
-    NextObs = [xt_plus_1; xdot_t_plus_1];
+    NextObs = [x; xdot];
 
     % Log signals
-    LoggedSignals = [xt_plus_1; xdot_t_plus_1];
+    LoggedSignals = [x; xdot];
 
     % Define reward
     if IsDone
