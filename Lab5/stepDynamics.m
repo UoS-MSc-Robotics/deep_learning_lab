@@ -37,10 +37,10 @@ function [NextObs, Reward, IsDone, LoggedSignals] = stepDynamics(Action, LoggedS
     end
 
     % Define next observation as the new state vector
-    NextObs = [xt_plus_1, xdot_t_plus_1]';
+    NextObs = [xt_plus_1; xdot_t_plus_1];
 
     % Log signals
-    LoggedSignals = [xt_plus_1, xdot_t_plus_1]';
+    LoggedSignals = [xt_plus_1; xdot_t_plus_1];
 
     % Define reward
     if IsDone

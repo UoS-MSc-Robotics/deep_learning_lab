@@ -4,14 +4,16 @@
 
 function [InitialObservation, LoggedSignals] = initialDynamics()
     % Initialise mountain car position from a uniform distribution
-    x0 = -0.6 + (-0.4 + 0.6) * rand;
+    x_min = -0.6;
+    x_max = -0.4;
+    x0 = x_min + (x_max - x_min) * rand;
 
     % Initialise mountain car velocity to zero
     xdot_0 = 0;
 
     % Define observation as the state vector
-    InitialObservation = [x0, xdot_0]';
+    InitialObservation = [x0; xdot_0];
 
     % Log signals
-    LoggedSignals = [x0, xdot_0]';
+    LoggedSignals = [x0; xdot_0];
 end
